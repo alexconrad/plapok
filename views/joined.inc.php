@@ -14,26 +14,31 @@ $this->display('_head.inc.php');
 <style>
 
     * {
-  margin: 0;
-}
-html, body {
-  height: 100%;
-}
-.page-wrap {
-  min-height: 100%;
-  /* equal to footer height */
-  margin-bottom: -135px;
-}
-.page-wrap:after {
-  content: "";
-  display: block;
-}
-.site-footer, .page-wrap:after {
-  height: 135px;
-}
-.site-footer {
-  background: #f0f0f0;
-}
+        margin: 0;
+    }
+
+    html, body {
+        height: 100%;
+    }
+
+    .page-wrap {
+        min-height: 100%;
+        /* equal to footer height */
+        margin-bottom: -135px;
+    }
+
+    .page-wrap:after {
+        content: "";
+        display: block;
+    }
+
+    .site-footer, .page-wrap:after {
+        height: 135px;
+    }
+
+    .site-footer {
+        background: #f0f0f0;
+    }
 
     .lds-ripple {
         display: inline-block;
@@ -110,7 +115,7 @@ html, body {
 </style>
 
 <script>
-function iSelected() {
+    function iSelected() {
         $('#selectStoryPoint').hide();
         $('#iDidIt').show();
     }
@@ -128,7 +133,11 @@ function iSelected() {
 
             if (roomInfo.room_status === <?=RoomStatus::NOT_ALL_READY()->getValue()?>) {
                 if (nextOkRoomFlip === true) {
+                    $.each(roomInfo.participants, function (index, element) {
+                        setThinkingOnParticipant($('#' + element.id));
+                    });
                     flipAllCards(roomInfo.participants, false, 'q');
+
                     $('#wait2').hide();
                     $('#iDidIt').hide();
                     $('#selectStoryPoint').show();
@@ -138,7 +147,6 @@ function iSelected() {
 
                 }
             }
-
 
 
             if (roomInfo.room_status === <?=RoomStatus::IS_RESETTING()->getValue()?>) {
@@ -172,7 +180,7 @@ function iSelected() {
 
             setTimeout(function () {
                 refreshRoom();
-            }, 2500);
+            }, 500);
         });
     }
 
@@ -180,9 +188,11 @@ function iSelected() {
         $.each(participants, function (index, element) {
             let exi = $('#' + element.id);
             if (setback === false) {
-                exi.children('div:eq(1)').children('.back').removeClass('frontq').addClass('front' + element.number);
-            }else{
-                exi.children('div:eq(1)').children('.back').removeClass('frontq').addClass('front' + setback);
+                exi.children('div:eq(1)').children('.back')
+                    .removeClassesExceptThese(["back"])
+                    .addClass('front' + element.number);
+            } else {
+                exi.children('div:eq(1)').children('.back').removeClassesExceptThese(["back"]).addClass('front' + setback);
             }
             setTimeout(function () {
                 $("#card_" + element.id).flip(flipValue);
@@ -277,12 +287,19 @@ function iSelected() {
 
     function setReadOnParticipant(ucard, id) {
         if (ucard.children('div:eq(1)').children('.front').children('#ss' + id).length === 0) {
-                ss = $('#lala_1').clone();
-                ss.prop('id', 'ss' + id);
-                ucard.children('div:eq(1)').children('.front').empty().append(ss);
-            }
+            ss = $('#lala_1').clone();
+            ss.prop('id', 'ss' + id);
+            ucard.children('div:eq(1)').children('.front').empty().append(ss);
+        }
     }
 
+    function setThinkingOnParticipant(ucard, id) {
+        if (ucard.children('div:eq(1)').children('.front').children('#ss' + id).length === 0) {
+            let qq = $('#toCloneThinking').clone();
+            qq.prop('id', 'tt' + id);
+            ucard.children('div:eq(1)').children('.front').empty().append(qq);
+        }
+    }
 
 
     function flashRed() {
@@ -301,6 +318,26 @@ function iSelected() {
     let sentStoryPoints = 0;
 
     new ClipboardJS('.btn');
+
+
+    Array.prototype.diff = function (a) {
+        return this.filter(function (i) {
+            return a.indexOf(i) < 0;
+        });
+    };
+    $.fn.removeClassesExceptThese = function (classList) {
+        /* pass mutliple class name in array like ["first", "second"] */
+        var $elem = $(this);
+
+        if ($elem.length > 0) {
+            var existingClassList = $elem.attr("class").split(' ');
+            var classListToRemove = existingClassList.diff(classList);
+            $elem
+                .removeClass(classListToRemove.join(" "))
+                .addClass(classList.join(" "));
+        }
+        return $elem;
+    };
 
 
     $(document).ready(function () {
@@ -331,8 +368,6 @@ function iSelected() {
             }
         }
     });
-
-
 
 
 </script>
@@ -392,7 +427,8 @@ function iSelected() {
             <div class="col w-100"
                  style="border: 0 solid red;vertical-align: middle;padding-top: 10px;width: 65px;font-family: Tahoma,serif;font-size: 20px;font-weight: bold;">
                 <?php if ($this->variables['isHost']) { ?>
-                    <button type="button" class="btn btn-success" onclick="startResetRoom();">Click to reset room and plan again</button>
+                    <button type="button" class="btn btn-success" onclick="startResetRoom();">Click to reset room and plan again
+                    </button>
                 <?php } ?>
             </div>
         </div>
@@ -401,10 +437,10 @@ function iSelected() {
 
     <!-- ------------------------------- -->
     <div style="display: none">
-    <div class="lds-ripple" style="margin-top: 40px;margin-left: 12px;" id="toCloneThinking">
-        <div></div>
-        <div></div>
-    </div>
+        <div class="lds-ripple" style="margin-top: 40px;margin-left: 12px;" id="toCloneThinking">
+            <div></div>
+            <div></div>
+        </div>
     </div>
 
 
@@ -540,23 +576,19 @@ function iSelected() {
 </div>
 
 
-
-
-
-
-
 <footer class="site-footer text-center" style="padding: 15px;">
 
 
-
- <div class="card" style="margin: 0px 0px 10px 0px;border-width: 0;background: #f5f5f5">
+    <div class="card" style="margin: 0px 0px 10px 0px;border-width: 0;background: #f5f5f5">
         <div class="card-body">
             <div class="input-group mb-3">
 
                 <div class="input-group-prepend">
                     <span class="input-group-text" id="basic-addon3" style="font-size: 20px;">
                         <A href="https://github.com/alexconrad/plapok" target="_blank">
-                <svg height="32" class="octicon octicon-mark-github" viewBox="0 0 16 16" version="1.1" width="32" aria-hidden="true"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
+                <svg height="32" class="octicon octicon-mark-github" viewBox="0 0 16 16" version="1.1" width="32" aria-hidden="true"><path
+                            fill-rule="evenodd"
+                            d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
                         </A>
                     </span>
                 </div>
@@ -564,9 +596,13 @@ function iSelected() {
 
                 <div class="input-group-prepend">
                     <span class="input-group-text" id="basic-addon3" style="font-size: 20px;">
-                        <A href="<?=Common::link([WebController::class,'index'])?>" title="Exit">
+                        <A href="<?= Common::link([WebController::class, 'index']) ?>" title="Exit">
 
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-log-out"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+     stroke-linecap="round" stroke-linejoin="round" class="feather feather-log-out"><path
+            d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12"
+                                                                                                                    x2="9"
+                                                                                                                    y2="12"></line></svg>
                         </A>
                     </span>
                 </div>
@@ -574,19 +610,28 @@ function iSelected() {
                 <div class="input-group-prepend">
                 <span class="input-group-text" id="basic-addon3" style="font-size: 20px;">
                     <A href="#" onclick="refreshRoom();" title="debug">
-                        <svg xml:space="preserve" viewBox="0 0 100 100" y="0" x="0" xmlns="http://www.w3.org/2000/svg" id="_1" version="1.1" width="24px" height="24px" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:100%;height:100%;background-size:initial;background-repeat-y:initial;background-repeat-x:initial;background-position-y:initial;background-position-x:initial;background-origin:initial;background-color:initial;background-clip:initial;background-attachment:initial;animation-play-state:paused" ><g class="ldl-scale" style="transform-origin:50% 50%;transform:rotate(0deg) scale(1, 1);animation-play-state:paused" ><path stroke-miterlimit="10" stroke-width="9" stroke="#e15b64" fill="#fff" d="M41.6 18.9L11.3 71.4c-3.7 6.5.9 14.6 8.4 14.6h60.6c7.5 0 12.1-8.1 8.4-14.6L58.4 18.9c-3.7-6.4-13.1-6.4-16.8 0z" style="stroke:rgb(225, 91, 100);fill:rgb(255, 255, 255);animation-play-state:paused" ></path>
-<circle fill="#333" r="5.4" cy="69.4" cx="50" style="fill:rgb(51, 51, 51);animation-play-state:paused" ></circle>
-<path fill="#333" d="M55.4 43.8c0 6-1.6 11.3-3.1 14.9-.8 2.1-3.8 2.1-4.7 0-1.5-3.6-3.1-9-3.1-14.9 0-8.9 2.4-11.9 5.4-11.9s5.5 3 5.5 11.9z" style="fill:rgb(51, 51, 51);animation-play-state:paused" ></path>
-<!--<metadata xmlns:d="https://loading.io/stock/" style="animation-play-state:paused" ><d:name style="animation-play-state:paused" >caution</d:name>
-<d:tags style="animation-play-state:paused" >hint,note,warning,danger,reminder,sign,exclamation,caution,transportation</d:tags>
-<d:license style="animation-play-state:paused" >by</d:license>
-<d:slug style="animation-play-state:paused" >1t5sok</d:slug></metadata>--></g><!-- generated by https://loading.io/ --></svg>
+                        <svg xml:space="preserve" viewBox="0 0 100 100" y="0" x="0" xmlns="http://www.w3.org/2000/svg" id="_1"
+                             version="1.1" width="24px" height="24px" xmlns:xlink="http://www.w3.org/1999/xlink"
+                             style="width:100%;height:100%;background-size:initial;background-repeat-y:initial;background-repeat-x:initial;background-position-y:initial;background-position-x:initial;background-origin:initial;background-color:initial;background-clip:initial;background-attachment:initial;animation-play-state:paused"><g
+                                    class="ldl-scale"
+                                    style="transform-origin:50% 50%;transform:rotate(0deg) scale(1, 1);animation-play-state:paused"><path
+                                        stroke-miterlimit="10" stroke-width="9" stroke="#e15b64" fill="#fff"
+                                        d="M41.6 18.9L11.3 71.4c-3.7 6.5.9 14.6 8.4 14.6h60.6c7.5 0 12.1-8.1 8.4-14.6L58.4 18.9c-3.7-6.4-13.1-6.4-16.8 0z"
+                                        style="stroke:rgb(225, 91, 100);fill:rgb(255, 255, 255);animation-play-state:paused"></path>
+<circle fill="#333" r="5.4" cy="69.4" cx="50" style="fill:rgb(51, 51, 51);animation-play-state:paused"></circle>
+<path fill="#333"
+      d="M55.4 43.8c0 6-1.6 11.3-3.1 14.9-.8 2.1-3.8 2.1-4.7 0-1.5-3.6-3.1-9-3.1-14.9 0-8.9 2.4-11.9 5.4-11.9s5.5 3 5.5 11.9z"
+      style="fill:rgb(51, 51, 51);animation-play-state:paused"></path>
+                                <!--<metadata xmlns:d="https://loading.io/stock/" style="animation-play-state:paused" ><d:name style="animation-play-state:paused" >caution</d:name>
+                                <d:tags style="animation-play-state:paused" >hint,note,warning,danger,reminder,sign,exclamation,caution,transportation</d:tags>
+                                <d:license style="animation-play-state:paused" >by</d:license>
+                                <d:slug style="animation-play-state:paused" >1t5sok</d:slug></metadata>--></g><!-- generated by https://loading.io/ --></svg>
 
-                <!--    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2"
-                         stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path
-                                d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path
-                                d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>-->
+                        <!--    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 stroke="currentColor" stroke-width="2"
+                                 stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path
+                                        d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path
+                                        d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>-->
                     </A>
                 </span>
                 </div>
@@ -608,8 +653,6 @@ function iSelected() {
         </div>
     </div>
 </footer>
-
-
 
 
 </body>
