@@ -13,13 +13,14 @@ use PlaPok\Enum\StoryPoint;
 use PlaPok\Exceptions\ParticipantNotFound;
 use PlaPok\Exceptions\RoomInfoNotFound;
 use PlaPok\Exceptions\RoomNotFound;
-use PlaPok\Services\SessionService;
 
 class RoomService
 {
     private const ROOM_KEY = 'room_key';
     private const PARTICIPANT_ID = 'pid';
     private const USERNAME_KEY = 'username_key';
+
+    public const COOKIE_NAME = 'plapok_name';
 
     /** @var EasyMysql */
     private EasyMysql $easyMysql;
@@ -70,6 +71,11 @@ class RoomService
         $this->sessionService->set(self::PARTICIPANT_ID, $participantId);
         $this->sessionService->set(self::ROOM_KEY, $roomKey);
         $this->sessionService->set(self::USERNAME_KEY, $name);
+
+        setcookie(self::COOKIE_NAME, $name, [
+            'expires' => time() + 60*60*24*30,
+            'httponly' => true,
+        ]);
     }
 
     /**
