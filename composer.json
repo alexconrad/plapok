@@ -1,0 +1,11 @@
+{
+    "require": {
+        "alexconrad/easy-mysql": "^0.2.1",
+        "myclabs/php-enum": "^1.8"
+    },
+    "autoload": {
+        "psr-4": {
+            "PlaPok\\": "src/"
+        }
+    }
+}
