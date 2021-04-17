@@ -1,2 +1,3 @@
-vendor
-defines.php
+/.idea
+/vendor
+/defines.php
