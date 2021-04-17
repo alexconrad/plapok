@@ -72,4 +72,17 @@ class WebController
         $this->viewService->display('joined.inc.php');
     }
 
+    /**
+     * @throws EasyMysqlQueryException
+     * @throws RoomInfoNotFound
+     * @throws RoomNotFound
+     */
+    public function exitRoom(): void
+    {
+        [$roomKey, $username, $participantId, $isHost] = $this->roomService->roomInfo();
+        $this->roomService->exitRoom($roomKey, $participantId);
+        $this->roomService->clearSession();
+        header('Location: '.Common::link([__CLASS__, 'index']));
+    }
+
 }

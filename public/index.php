@@ -59,6 +59,9 @@ try {
         case 'xhrFinishResetRoom':
             $container->get(XHRController::class)->xhrFinishResetRoom();
             break;
+        case 'exitRoom':
+            $container->get(WebController::class)->exitRoom();
+            break;
         default:
             throw new RuntimeException('Invalid action');
             break;

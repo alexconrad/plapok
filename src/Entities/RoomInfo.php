@@ -11,6 +11,8 @@ use RuntimeException;
 
 class RoomInfo
 {
+    public const ID_PREFIX = 'participant_';
+
     private RoomStatus $roomStatus;
 
     /** @var Participant[] */
@@ -65,7 +67,7 @@ class RoomInfo
         $allParticipants = [];
         foreach ($this->getParticipants() as $participant) {
             $allParticipants[] = [
-                'id' => 'p' . $participant->getId(),
+                'id' => self::ID_PREFIX . $participant->getId(),
                 'name' => $participant->getName(),
                 'isReady' => $participant->getParticipantStatus()->getValue(),
                 'number' => $participant->getStoryPoint()?->getValue(),

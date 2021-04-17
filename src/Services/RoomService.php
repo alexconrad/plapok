@@ -86,7 +86,7 @@ class RoomService
         $this->sessionService->set(self::IS_HOST, $isHost);
 
         setcookie(self::COOKIE_NAME, $name, [
-            'expires' => time() + 60*60*24*30,
+            'expires' => time() + 60 * 60 * 24 * 30,
             'httponly' => true,
         ]);
     }
@@ -202,7 +202,8 @@ class RoomService
      * @throws EasyMysqlQueryException
      * @throws RoomNotFound
      */
-    public function ackReset($roomKey, $participantId) {
+    public function ackReset($roomKey, $participantId)
+    {
         $roomId = $this->getRoomId($roomKey);
         $this->easyMysql->update('UPDATE people SET ack_reset = 1 WHERE room_id= :room_id AND id = :id ', [
             'room_id' => $roomId,
@@ -247,6 +248,21 @@ class RoomService
 
         return (int)$participantId;
 
+    }
+
+    /**
+     * @param $roomKey
+     * @param $participantId
+     * @throws EasyMysqlQueryException
+     * @throws RoomNotFound
+     */
+    public function exitRoom($roomKey, $participantId): void
+    {
+        $roomId = $this->getRoomId($roomKey);
+        $this->easyMysql->delete('DELETE FROM people WHERE room_id = :room_id AND id = :id', [
+            'room_id' => $roomId,
+            'id' => $participantId
+        ]);
     }
 
 
