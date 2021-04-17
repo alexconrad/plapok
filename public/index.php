@@ -50,8 +50,14 @@ try {
         case 'xhrSendStoryPoint':
             $container->get(XHRController::class)->xhrSendStoryPoint();
             break;
-        case 'xhrResetRoom':
-            $container->get(XHRController::class)->xhrResetRoom();
+        case 'xhrStartResetRoom':
+            $container->get(XHRController::class)->xhrStartResetRoom();
+            break;
+        case 'xhrAckReset':
+            $container->get(XHRController::class)->xhrAckReset();
+            break;
+        case 'xhrFinishResetRoom':
+            $container->get(XHRController::class)->xhrFinishResetRoom();
             break;
         default:
             throw new RuntimeException('Invalid action');

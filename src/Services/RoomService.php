@@ -19,6 +19,7 @@ class RoomService
     private const ROOM_KEY = 'room_key';
     private const PARTICIPANT_ID = 'pid';
     private const USERNAME_KEY = 'username_key';
+    private const IS_HOST = 'is_host';
 
     public const COOKIE_NAME = 'plapok_name';
 
@@ -33,8 +34,16 @@ class RoomService
         $this->sessionService = $sessionService;
     }
 
+    public function clearSession(): void
+    {
+        $this->sessionService->unset(self::ROOM_KEY);
+        $this->sessionService->unset(self::USERNAME_KEY);
+        $this->sessionService->unset(self::PARTICIPANT_ID);
+        $this->sessionService->unset(self::IS_HOST);
+    }
+
     /**
-     * @return array<string, string, string>
+     * @return array<string, string, string, int>
      * @throws RoomInfoNotFound
      */
     public function roomInfo(): array
@@ -42,11 +51,13 @@ class RoomService
         $roomKey = $this->sessionService->get(self::ROOM_KEY);
         $username = $this->sessionService->get(self::USERNAME_KEY);
         $participantId = $this->sessionService->get(self::PARTICIPANT_ID);
+        $isHost = $this->sessionService->get(self::IS_HOST) ?? 0;
 
         if (empty($roomKey) || empty($username)) {
             throw new RoomInfoNotFound('Room info not found');
         }
-        return [$roomKey, $username, $participantId];
+
+        return [$roomKey, $username, $participantId, (int)$isHost];
     }
 
     /**
@@ -71,6 +82,8 @@ class RoomService
         $this->sessionService->set(self::PARTICIPANT_ID, $participantId);
         $this->sessionService->set(self::ROOM_KEY, $roomKey);
         $this->sessionService->set(self::USERNAME_KEY, $name);
+        $isHost = $this->sessionService->get(self::IS_HOST) ?? 0;
+        $this->sessionService->set(self::IS_HOST, $isHost);
 
         setcookie(self::COOKIE_NAME, $name, [
             'expires' => time() + 60*60*24*30,
@@ -86,6 +99,7 @@ class RoomService
     {
         $roomKey = bin2hex(random_bytes(3));
         $roomId = $this->easyMysql->insert('INSERT INTO rooms SET room_key = :room_key', ['room_key' => $roomKey]);
+        $this->sessionService->set(self::IS_HOST, 1);
         return [$roomId, $roomKey];
     }
 
@@ -100,11 +114,12 @@ class RoomService
                 $row['id'],
                 $row['name'],
                 new ParticipantStatus((int)$row['participant_status']),
-                empty($row['number']) ? null : new StoryPoint($row['number'])
+                empty($row['number']) ? null : new StoryPoint($row['number']),
+                (bool)$row['ack_reset'],
             );
         }
 
-        return new RoomInfo(...$participants);
+        return new RoomInfo((bool)$roomInfo['is_resetting'], ...$participants);
     }
 
     /**
@@ -150,12 +165,48 @@ class RoomService
      * @throws EasyMysqlQueryException
      * @throws RoomNotFound
      */
-    public function resetRoom($roomKey): void
+    public function startResetRoom($roomKey): void
+    {
+        $roomId = $this->getRoomId($roomKey);
+        $this->easyMysql->update('UPDATE people SET ack_reset = 0 WHERE room_id = :id ', [
+            'id' => $roomId,
+        ]);
+        $this->easyMysql->update('UPDATE rooms SET is_resetting = :re WHERE room_id = :id ', [
+            're' => 1,
+            'id' => $roomId,
+        ]);
+    }
+
+    /**
+     * @param $roomKey
+     * @throws EasyMysqlQueryException
+     * @throws RoomNotFound
+     */
+    public function finishResetRoom($roomKey): void
     {
         $roomId = $this->getRoomId($roomKey);
         $this->easyMysql->update('UPDATE people SET participant_status = :rst, number = NULL WHERE room_id = :id ', [
             'rst' => ParticipantStatus::NOT_READY()->getValue(),
             'id' => $roomId,
+        ]);
+        $this->easyMysql->update('UPDATE rooms SET is_resetting = :re WHERE room_id = :id ', [
+            're' => 0,
+            'id' => $roomId,
+        ]);
+    }
+
+
+    /**
+     * @param $roomKey
+     * @param $participantId
+     * @throws EasyMysqlQueryException
+     * @throws RoomNotFound
+     */
+    public function ackReset($roomKey, $participantId) {
+        $roomId = $this->getRoomId($roomKey);
+        $this->easyMysql->update('UPDATE people SET ack_reset = 1 WHERE room_id= :room_id AND id = :id ', [
+            'room_id' => $roomId,
+            'id' => $participantId,
         ]);
     }
 

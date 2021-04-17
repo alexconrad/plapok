@@ -13,13 +13,20 @@ class Participant
     private ParticipantStatus $participantStatus;
     private ?StoryPoint $storyPoint;
     private $id;
+    private ?bool $ackReset;
 
-    public function __construct($id, string $name, ParticipantStatus $participantStatus, ?StoryPoint $number)
+    public function __construct($id, string $name, ParticipantStatus $participantStatus, ?StoryPoint $number, bool $ackReset)
     {
         $this->id = $id;
         $this->name = $name;
         $this->participantStatus = $participantStatus;
         $this->storyPoint = $number;
+        $this->ackReset = $ackReset;
+    }
+
+    public function getAckReset(): bool
+    {
+        return $this->ackReset;
     }
 
     public function getId()

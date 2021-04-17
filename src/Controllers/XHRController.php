@@ -75,11 +75,29 @@ class XHRController
      * @throws RoomInfoNotFound
      * @throws RoomNotFound
      */
-    public function xhrResetRoom(): void
+    public function xhrStartResetRoom(): void
     {
         [$roomKey] = $this->roomService->roomInfo();
-        $this->roomService->resetRoom($roomKey);
+        $this->roomService->startResetRoom($roomKey);
     }
+
+    /**
+     * @throws EasyMysqlQueryException
+     * @throws RoomInfoNotFound
+     * @throws RoomNotFound
+     */
+    public function xhrAckReset(): void
+    {
+        [$roomKey, $name, $participantId] = $this->roomService->roomInfo();
+        $this->roomService->ackReset($roomKey, $participantId);
+    }
+
+    public function xhrFinishResetRoom(): void
+    {
+        [$roomKey] = $this->roomService->roomInfo();
+        $this->roomService->finishResetRoom($roomKey);
+    }
+
 
 
 }

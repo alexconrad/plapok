@@ -17,5 +17,10 @@ class SessionService
         return $_SESSION[$key] ?? null;
     }
 
+    public function unset(string $key): void
+    {
+        unset($_SESSION[$key]);
+    }
+
 
 }

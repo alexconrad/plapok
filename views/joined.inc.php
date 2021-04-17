@@ -115,6 +115,8 @@ function iSelected() {
         $('#iDidIt').show();
     }
 
+    let nextOkRoomFlip = false;
+
     function refreshRoom() {
         $.ajax({
             url: "<?=Common::link([XHRController::class, 'xhrRoomInfo'])?>",
@@ -124,27 +126,67 @@ function iSelected() {
                 addParticipant(element);
             });
 
+            if (roomInfo.room_status === <?=RoomStatus::NOT_ALL_READY()->getValue()?>) {
+                if (nextOkRoomFlip === true) {
+                    flipAllCards(roomInfo.participants, false, 'q');
+                    $('#wait2').hide();
+                    $('#iDidIt').hide();
+                    $('#selectStoryPoint').show();
+                    nextOkRoomFlip = false;
+                    chosenStoryPoint = 0;
+                    sentStoryPoints = 0;
+
+                }
+            }
+
+
+
+            if (roomInfo.room_status === <?=RoomStatus::IS_RESETTING()->getValue()?>) {
+                ackReset();
+                nextOkRoomFlip = true;
+                $('#wait2').show();
+                let allAck = 1;
+                $.each(roomInfo.participants, function (index, element) {
+                    if (element.ackReset === false) {
+                        allAck = 0;
+                    }
+                });
+
+                if (allAck === 1) {
+                    <?php if ($this->variables['isHost']) { ?>
+                    finishResetRoom();
+                    <?php } ?>
+                }
+
+            }
+
             if ((roomInfo.room_status === <?=RoomStatus::ALL_READY()->getValue()?>) && (sentStoryPoints === 0)) {
                 sendMyStoryPoints(chosenStoryPoint);
             }
             if (roomInfo.room_status === <?=RoomStatus::FINISHED()->getValue()?>) {
-                $.each(roomInfo.participants, function (index, element) {
-                    var exi = $('#' + element.id);
-                    exi.children('div:eq(1)').children('.back').removeClass('frontq').addClass('front' + element.number);
-                    setTimeout(function () {
-                        $("#card_" + element.id).flip(true);
-                    }, 250 + 250 * index);
-                });
+                flipAllCards(roomInfo.participants, true, false);
                 $("#wait1").hide(500);
                 $("#wait2").hide(500);
                 $('#reset1').show(1000);
-
-
             }
 
             setTimeout(function () {
                 refreshRoom();
             }, 2500);
+        });
+    }
+
+    function flipAllCards(participants, flipValue, setback) {
+        $.each(participants, function (index, element) {
+            let exi = $('#' + element.id);
+            if (setback === false) {
+                exi.children('div:eq(1)').children('.back').removeClass('frontq').addClass('front' + element.number);
+            }else{
+                exi.children('div:eq(1)').children('.back').removeClass('frontq').addClass('front' + setback);
+            }
+            setTimeout(function () {
+                $("#card_" + element.id).flip(flipValue);
+            }, 250 + 250 * index);
         });
     }
 
@@ -166,13 +208,31 @@ function iSelected() {
         });
     }
 
-    function resetRoom() {
+    function startResetRoom() {
         $.ajax({
-            url: "<?=Common::link([XHRController::class, 'xhrResetRoom'])?>",
+            url: "<?=Common::link([XHRController::class, 'xhrStartResetRoom'])?>",
         }).done(function () {
-            document.location.href = '<?=Common::link([WebController::class, 'joined'])?>';
+            $('#reset1').hide();
+            $('#wait2').show();
         });
     }
+
+    function finishResetRoom() {
+        $.ajax({
+            url: "<?=Common::link([XHRController::class, 'xhrFinishResetRoom'])?>",
+        }).done(function () {
+
+        });
+    }
+
+    function ackReset() {
+        $.ajax({
+            url: "<?=Common::link([XHRController::class, 'xhrAckReset'])?>",
+        }).done(function () {
+
+        });
+    }
+
 
     function addParticipant(element) {
 
@@ -200,16 +260,30 @@ function iSelected() {
         } else {
             if (rdy === 1) {
 
+                setReadOnParticipant(ucard, id);
+
+                /*
                 if (ucard.children('div:eq(1)').children('.front').children('#ss' + id).length === 0) {
                     ss = $('#lala_1').clone();
                     ss.prop('id', 'ss' + id);
                     ucard.children('div:eq(1)').children('.front').empty().append(ss);
                 }
+                 */
             }
 
         }
 
     }
+
+    function setReadOnParticipant(ucard, id) {
+        if (ucard.children('div:eq(1)').children('.front').children('#ss' + id).length === 0) {
+                ss = $('#lala_1').clone();
+                ss.prop('id', 'ss' + id);
+                ucard.children('div:eq(1)').children('.front').empty().append(ss);
+            }
+    }
+
+
 
     function flashRed() {
         $('#keb').css('background', '#FFDDDC').fadeOut(200).promise().done(function () {
@@ -317,13 +391,22 @@ function iSelected() {
         <div class="row justify-content-center" id="reset1" style="display: none;">
             <div class="col w-100"
                  style="border: 0 solid red;vertical-align: middle;padding-top: 10px;width: 65px;font-family: Tahoma,serif;font-size: 20px;font-weight: bold;">
-                <button type="button" class="btn btn-success" onclick="resetRoom();">Click to reset room and plan again</button>
+                <?php if ($this->variables['isHost']) { ?>
+                    <button type="button" class="btn btn-success" onclick="startResetRoom();">Click to reset room and plan again</button>
+                <?php } ?>
             </div>
         </div>
 
     </div>
 
     <!-- ------------------------------- -->
+    <div style="display: none">
+    <div class="lds-ripple" style="margin-top: 40px;margin-left: 12px;" id="toCloneThinking">
+        <div></div>
+        <div></div>
+    </div>
+    </div>
+
 
     <div class="col" id="toClone" style="display: none;height: 220px;border: 0px solid red;max-width: 130px;">
         <div style="width: 100px;border-bottom:1px solid #c0c0c0;margin-bottom: 10px;text-align: center;font-family: Tahoma,serif;font-size: 24px;color: #808080">

@@ -27,6 +27,7 @@ class WebController
 
     public function index(): void
     {
+        $this->roomService->clearSession();
         $this->viewService->display('index.inc.php');
     }
 
@@ -62,10 +63,12 @@ class WebController
      */
     public function joined(): void
     {
-        [$roomKey, $username, $participantId] = $this->roomService->roomInfo();
+        [$roomKey, $username, $participantId, $isHost] = $this->roomService->roomInfo();
+
         $this->viewService->assign('roomKey', $roomKey);
         $this->viewService->assign('username', $username);
         $this->viewService->assign('participantId', $participantId);
+        $this->viewService->assign('isHost', $isHost);
         $this->viewService->display('joined.inc.php');
     }
 

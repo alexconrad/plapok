@@ -16,27 +16,31 @@ class RoomInfo
     /** @var Participant[] */
     private array $participants;
 
-    public function __construct(Participant ... $participants)
+    public function __construct(bool $isResetting, Participant ...$participants)
     {
         $this->participants = $participants;
 
-        $allReady = true;
-        $allHaveNumbers = true;
-        foreach ($participants as $participant) {
-            if ($participant->getParticipantStatus()->equals(ParticipantStatus::NOT_READY())) {
-                $allReady = false;
+        if ($isResetting) {
+            $this->roomStatus = RoomStatus::IS_RESETTING();
+        }else {
+            $allReady = true;
+            $allHaveNumbers = true;
+            foreach ($participants as $participant) {
+                if ($participant->getParticipantStatus()->equals(ParticipantStatus::NOT_READY())) {
+                    $allReady = false;
+                }
+                if ($participant->getStoryPoint() === null) {
+                    $allHaveNumbers = false;
+                }
             }
-            if ($participant->getStoryPoint() === null) {
-                $allHaveNumbers = false;
-            }
-        }
 
-        if ($allHaveNumbers && $allReady) {
-            $this->roomStatus = RoomStatus::FINISHED();
-        }elseif ($allReady){
-            $this->roomStatus = RoomStatus::ALL_READY();
-        }else{
-            $this->roomStatus = RoomStatus::NOT_ALL_READY();
+            if ($allHaveNumbers && $allReady) {
+                $this->roomStatus = RoomStatus::FINISHED();
+            } elseif ($allReady) {
+                $this->roomStatus = RoomStatus::ALL_READY();
+            } else {
+                $this->roomStatus = RoomStatus::NOT_ALL_READY();
+            }
         }
     }
 
@@ -61,10 +65,11 @@ class RoomInfo
         $allParticipants = [];
         foreach ($this->getParticipants() as $participant) {
             $allParticipants[] = [
-                'id' => 'p'.$participant->getId(),
+                'id' => 'p' . $participant->getId(),
                 'name' => $participant->getName(),
                 'isReady' => $participant->getParticipantStatus()->getValue(),
                 'number' => $participant->getStoryPoint()?->getValue(),
+                'ackReset' => $participant->getAckReset()
             ];
         }
 
