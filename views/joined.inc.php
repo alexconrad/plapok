@@ -133,7 +133,6 @@ $this->display('_head.inc.php');
             });
 
             $('div[id^="<?=RoomInfo::ID_PREFIX?>"]').each(function (index) {
-                console.log(index + ": " + $(this).prop("id"));
                 let this_id = $(this).prop("id");
                 let found = false;
                 $.each(roomInfo.participants, function (index, element) {
