@@ -265,5 +265,20 @@ class RoomService
         ]);
     }
 
+    /**
+     * @param $roomKey
+     * @param $participantName
+     * @throws EasyMysqlQueryException
+     * @throws RoomNotFound
+     */
+    public function deleteParticipant($roomKey, $participantName): void
+    {
+        $roomId = $this->getRoomId($roomKey);
+        $this->easyMysql->delete('DELETE FROM people WHERE room_id = :room_id AND name = :name', [
+            'room_id' => $roomId,
+            'name' => $participantName
+        ]);
+    }
+
 
 }

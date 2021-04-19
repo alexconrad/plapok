@@ -62,6 +62,9 @@ try {
         case 'exitRoom':
             $container->get(WebController::class)->exitRoom();
             break;
+        case 'xhrKickParticipant':
+            $container->get(XHRController::class)->xhrKickParticipant();
+            break;
         default:
             throw new RuntimeException('Invalid action');
             break;

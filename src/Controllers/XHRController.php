@@ -98,6 +98,19 @@ class XHRController
         $this->roomService->finishResetRoom($roomKey);
     }
 
+    /**
+     * @throws EasyMysqlQueryException
+     * @throws RoomInfoNotFound
+     * @throws RoomNotFound
+     */
+    public function xhrKickParticipant(): void
+    {
+        [$roomKey, $name, $participantId, $isHost] = $this->roomService->roomInfo();
+        if ($isHost) {
+            $this->roomService->deleteParticipant($roomKey, $this->variable->post('kickParticipantName'));
+        }
+    }
+
 
 
 }
