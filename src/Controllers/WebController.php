@@ -27,6 +27,7 @@ class WebController
 
     public function index(): void
     {
+        $this->viewService->assign('youAreKicked', $this->roomService->getKickedNotification());
         $this->roomService->clearSession();
         $this->viewService->display('index.inc.php');
     }
@@ -43,7 +44,7 @@ class WebController
             throw new RuntimeException('Bad name/key');
         }
         $this->roomService->joinRoom($roomKey, $name);
-        header('Location: '.Common::link([__CLASS__, 'joined']));
+        header('Location: ' . Common::link([__CLASS__, 'joined']));
     }
 
     /**
@@ -55,7 +56,7 @@ class WebController
         [$roomId, $roomKey] = $this->roomService->createRoom();
         $this->roomService->joinRoom($roomKey, $this->variable->post('username'), $roomId);
 
-        header('Location: '.Common::link([__CLASS__, 'joined']));
+        header('Location: ' . Common::link([__CLASS__, 'joined']));
     }
 
     /**
@@ -82,7 +83,14 @@ class WebController
         [$roomKey, $username, $participantId, $isHost] = $this->roomService->roomInfo();
         $this->roomService->exitRoom($roomKey, $participantId);
         $this->roomService->clearSession();
-        header('Location: '.Common::link([__CLASS__, 'index']));
+        header('Location: ' . Common::link([__CLASS__, 'index']));
+    }
+
+    public function youHaveBeenKicked(): void
+    {
+        $this->roomService->clearSession();
+        $this->roomService->setKickedNotification();
+        header('Location: ' . Common::link([__CLASS__, 'index']));
     }
 
 }

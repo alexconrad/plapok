@@ -128,9 +128,18 @@ $this->display('_head.inc.php');
             url: "<?=Common::link([XHRController::class, 'xhrRoomInfo'])?>",
         }).done(function (data) {
             let roomInfo = jQuery.parseJSON(data);
+            let youAreInRoom = false;
             $.each(roomInfo.participants, function (index, element) {
                 addParticipant(element);
+                if (element.id === '<?= RoomInfo::ID_PREFIX.$this->variables['participantId']; ?>') {
+                    youAreInRoom = true;
+                }
             });
+
+            if (youAreInRoom === false) {
+                youAreNoLongerInTheRoom();
+                return;
+            }
 
             $('div[id^="<?=RoomInfo::ID_PREFIX?>"]').each(function (index) {
                 let this_id = $(this).prop("id");
@@ -214,6 +223,10 @@ $this->display('_head.inc.php');
         });
     }
 
+    function youAreNoLongerInTheRoom() {
+        document.location.href = '<?= Common::link([WebController::class,'youHaveBeenKicked'])?>';
+    }
+
     function iAmReady() {
         $.ajax({
             url: "<?=Common::link([XHRController::class, 'xhrParticipantReady'])?>",
@@ -291,17 +304,20 @@ $this->display('_head.inc.php');
             part.prop('id', id);
 
             <?php if ($this->variables['isHost']) { ?>
-            part.children('div:first').empty().html(jQuery('<a></a>', {
-    href: '#',
-    title: 'now this a has a title!'
-}).text(element.name).bind('click', function () {
 
-        $('#kickName').text(element.name);
-        let kickModal = $('#kickParticipant');
 
-        kickModal.modal('show');
-        //kickParticipant(element.name);
-    }));
+                part.children('div:first').empty().html(jQuery('<a></a>', {
+                    href: '#',
+                    title: 'Kick'
+                }).text(element.name).bind('click', function () {
+                    if (element.id !== '<?=RoomInfo::ID_PREFIX.$this->variables['participantId']?>') {
+                        $('#kickName').text(element.name);
+                        let kickModal = $('#kickParticipant');
+                        kickModal.modal('show');
+                    }else{
+                        $('#kickYouself').modal('show');
+                    }
+                }));
             <?php } else { ?>
 
             part.children('div:first').empty().text(element.name);
@@ -322,16 +338,7 @@ $this->display('_head.inc.php');
             $("#card_" + id).flip({trigger: "manual"});
         } else {
             if (rdy === 1) {
-
                 setReadOnParticipant(ucard, id);
-
-                /*
-                if (ucard.children('div:eq(1)').children('.front').children('#ss' + id).length === 0) {
-                    ss = $('#lala_1').clone();
-                    ss.prop('id', 'ss' + id);
-                    ucard.children('div:eq(1)').children('.front').empty().append(ss);
-                }
-                 */
             }
 
         }
@@ -651,6 +658,24 @@ $this->display('_head.inc.php');
   </div>
 </div>
 
+<div class="modal" tabindex="-1" role="dialog" id="kickYouself">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Kick youself ?!?</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-left: 100px;">
+            <img src="/assets/confused-1.7s-150px.svg" alt="kick">
+            <button type="button" class="btn btn-danger" onclick="document.location.href='<?=Common::link([WebController::class,'exitRoom'])?>';return false;">Kick youself</button>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
 
 
 <footer class="site-footer text-center" style="padding: 15px;">

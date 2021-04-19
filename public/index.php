@@ -65,6 +65,9 @@ try {
         case 'xhrKickParticipant':
             $container->get(XHRController::class)->xhrKickParticipant();
             break;
+        case 'youHaveBeenKicked':
+            $container->get(WebController::class)->youHaveBeenKicked();
+            break;
         default:
             throw new RuntimeException('Invalid action');
             break;

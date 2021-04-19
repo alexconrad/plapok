@@ -20,6 +20,7 @@ class RoomService
     private const PARTICIPANT_ID = 'pid';
     private const USERNAME_KEY = 'username_key';
     private const IS_HOST = 'is_host';
+    private const YOU_ARE_KICKED = 'kicked_key';
 
     public const COOKIE_NAME = 'plapok_name';
 
@@ -278,6 +279,21 @@ class RoomService
             'room_id' => $roomId,
             'name' => $participantName
         ]);
+    }
+
+    public function setKickedNotification(): void
+    {
+        $this->sessionService->set(self::YOU_ARE_KICKED, 1);
+    }
+
+    public function getKickedNotification(): bool
+    {
+        $kicked = $this->sessionService->get(self::YOU_ARE_KICKED);
+        if ($kicked !== null) {
+            $this->sessionService->unset(self::YOU_ARE_KICKED);
+        }
+
+        return (bool)$kicked;
     }
 
 
