@@ -122,8 +122,17 @@ $this->display('_head.inc.php');
     }
 
     let nextOkRoomFlip = false;
+    let maxNumberOfRefresheRooms = 3000;
+    let remainingNumberOfRefreses = maxNumberOfRefresheRooms;
 
     function refreshRoom() {
+        remainingNumberOfRefreses--;
+        $('#refreshCounter').text(remainingNumberOfRefreses);
+        if (remainingNumberOfRefreses <= 0) {
+            $('#timedOut').modal('show');
+            return;
+        }
+
         $.ajax({
             url: "<?=Common::link([XHRController::class, 'xhrRoomInfo'])?>",
         }).done(function (data) {
@@ -369,6 +378,10 @@ $this->display('_head.inc.php');
         });
     }
 
+    function resetCounter() {
+        remainingNumberOfRefreses = maxNumberOfRefresheRooms;
+    }
+
 
 </script>
 
@@ -386,7 +399,7 @@ $this->display('_head.inc.php');
         });
     };
     $.fn.removeClassesExceptThese = function (classList) {
-        /* pass mutliple class name in array like ["first", "second"] */
+        /* pass multiple class name in array like ["first", "second"] */
         var $elem = $(this);
 
         if ($elem.length > 0) {
@@ -405,6 +418,7 @@ $this->display('_head.inc.php');
     });
 
     $(document).keypress(function (e) {
+        resetCounter();
         if (chosenStoryPoint === 0) {
             if (e.which === 49 || e.which === 50 || e.which === 51 || e.which === 53 || e.which === 56) {
                 if (e.which === 49) {
@@ -648,15 +662,33 @@ $this->display('_head.inc.php');
       <div class="modal-body">
         <p style="margin-left: 100px;">
             <img src="/assets/remove-0.6s-150px.svg" alt="kick">
-            <button type="button" class="btn btn-danger" onclick="kickParticipant($('#kickName').text());">Kick</button>
+            <button type="button" class="btn btn-danger" onclick="resetCounter();kickParticipant($('#kickName').text());">Kick</button>
         </p>
-<!--<div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-      </div>-->
       </div>
     </div>
   </div>
 </div>
+
+<div class="modal" tabindex="-1" role="dialog" id="timedOut">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Inactive for too long</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-left: 100px;">
+            <img src="/assets/Clock-20s-150px.svg" alt="clock">
+            <button type="button" class="btn btn-primary" onclick="resetCounter();refreshRoom();$('#timedOut').modal('hide');return false">Click to resume.</button>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 
 <div class="modal" tabindex="-1" role="dialog" id="kickYouself">
   <div class="modal-dialog" role="document">
@@ -681,7 +713,7 @@ $this->display('_head.inc.php');
 <footer class="site-footer text-center" style="padding: 15px;">
 
 
-    <div class="card" style="margin: 0px 0px 10px 0px;border-width: 0;background: #f5f5f5">
+    <div class="card" style="margin: 0px 0px 10px 0px;border-width: 0;background: #f0f0f0">
         <div class="card-body">
             <div class="input-group mb-3">
 
@@ -711,32 +743,8 @@ $this->display('_head.inc.php');
 
                 <div class="input-group-prepend">
                 <span class="input-group-text" id="basic-addon3" style="font-size: 20px;">
-                    <A href="#" onclick="refreshRoom();" title="debug">
-                        <svg xml:space="preserve" viewBox="0 0 100 100" y="0" x="0" xmlns="http://www.w3.org/2000/svg" id="_1"
-                             version="1.1" width="24px" height="24px" xmlns:xlink="http://www.w3.org/1999/xlink"
-                             style="width:100%;height:100%;background-size:initial;background-repeat-y:initial;background-repeat-x:initial;background-position-y:initial;background-position-x:initial;background-origin:initial;background-color:initial;background-clip:initial;background-attachment:initial;animation-play-state:paused"><g
-                                    class="ldl-scale"
-                                    style="transform-origin:50% 50%;transform:rotate(0deg) scale(1, 1);animation-play-state:paused"><path
-                                        stroke-miterlimit="10" stroke-width="9" stroke="#e15b64" fill="#fff"
-                                        d="M41.6 18.9L11.3 71.4c-3.7 6.5.9 14.6 8.4 14.6h60.6c7.5 0 12.1-8.1 8.4-14.6L58.4 18.9c-3.7-6.4-13.1-6.4-16.8 0z"
-                                        style="stroke:rgb(225, 91, 100);fill:rgb(255, 255, 255);animation-play-state:paused"></path>
-<circle fill="#333" r="5.4" cy="69.4" cx="50" style="fill:rgb(51, 51, 51);animation-play-state:paused"></circle>
-<path fill="#333"
-      d="M55.4 43.8c0 6-1.6 11.3-3.1 14.9-.8 2.1-3.8 2.1-4.7 0-1.5-3.6-3.1-9-3.1-14.9 0-8.9 2.4-11.9 5.4-11.9s5.5 3 5.5 11.9z"
-      style="fill:rgb(51, 51, 51);animation-play-state:paused"></path>
-                                <!--<metadata xmlns:d="https://loading.io/stock/" style="animation-play-state:paused" ><d:name style="animation-play-state:paused" >caution</d:name>
-                                <d:tags style="animation-play-state:paused" >hint,note,warning,danger,reminder,sign,exclamation,caution,transportation</d:tags>
-                                <d:license style="animation-play-state:paused" >by</d:license>
-                                <d:slug style="animation-play-state:paused" >1t5sok</d:slug></metadata>--></g>
-                            <!-- generated by https://loading.io/ --></svg>
-
-                        <!--    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                 stroke="currentColor" stroke-width="2"
-                                 stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path
-                                        d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path
-                                        d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>-->
-                    </A>
-                </span>
+                    <img src="assets/Clock-4.8s-24px.svg" alt="clock" style="margin-top:2px;" width="32" onclick="resetCounter();" onmouseover="this.style.cursor = 'hand';" title="Click to reset counter">
+                    <span id="refreshCounter" style="font-size: 12px;">.</span>
                 </div>
                 <input type="text" class="form-control" id="roomKey" aria-describedby="basic-addon3" readonly
                        style="width:200px;height: 60px;font-size: 18px;text-align: center;"
