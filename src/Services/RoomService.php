@@ -5,6 +5,7 @@ namespace PlaPok\Services;
 
 
 use EasyMysql\EasyMysql;
+use EasyMysql\Exceptions\DuplicateEntryException;
 use EasyMysql\Exceptions\EasyMysqlQueryException;
 use PlaPok\Entities\Participant;
 use PlaPok\Entities\RoomInfo;
@@ -65,7 +66,7 @@ class RoomService
      * @param $roomKey
      * @param $name
      * @param null $roomId
-     * @throws EasyMysqlQueryException
+     * @throws EasyMysqlQueryException|DuplicateEntryException
      * @throws RoomNotFound
      */
     public function joinRoom($roomKey, $name, $roomId = null): void
@@ -74,17 +75,25 @@ class RoomService
             $roomId = $this->getRoomId($roomKey);
         }
 
-        $participantId = $this->easyMysql->insert('INSERT INTO people SET room_id = :room_id, name=:name, participant_status=:sts, number=NULL', [
-            'room_id' => $roomId,
-            'name' => $name,
-            'sts' => ParticipantStatus::NOT_READY()->getValue()
-        ]);
+        try {
 
-        $this->sessionService->set(self::PARTICIPANT_ID, $participantId);
-        $this->sessionService->set(self::ROOM_KEY, $roomKey);
-        $this->sessionService->set(self::USERNAME_KEY, $name);
-        $isHost = $this->sessionService->get(self::IS_HOST) ?? 0;
-        $this->sessionService->set(self::IS_HOST, $isHost);
+            $participantId = $this->easyMysql->insert('INSERT INTO people SET room_id = :room_id, name=:name, participant_status=:sts, number=NULL', [
+                'room_id' => $roomId,
+                'name' => $name,
+                'sts' => ParticipantStatus::NOT_READY()->getValue()
+            ]);
+
+            $this->sessionService->set(self::PARTICIPANT_ID, $participantId);
+            $this->sessionService->set(self::ROOM_KEY, $roomKey);
+            $this->sessionService->set(self::USERNAME_KEY, $name);
+            $isHost = $this->sessionService->get(self::IS_HOST) ?? 0;
+            $this->sessionService->set(self::IS_HOST, $isHost);
+
+        } catch (DuplicateEntryException $exception) {
+            if (($name !== $this->sessionService->get(self::USERNAME_KEY)) || ($roomKey !== $this->sessionService->get(self::ROOM_KEY))) {
+                throw $exception;
+            }
+        }
 
         setcookie(self::COOKIE_NAME, $name, [
             'expires' => time() + 60 * 60 * 24 * 30,

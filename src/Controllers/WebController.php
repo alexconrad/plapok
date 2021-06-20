@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace PlaPok\Controllers;
 
+use EasyMysql\Exceptions\DuplicateEntryException;
 use EasyMysql\Exceptions\EasyMysqlQueryException;
 use PlaPok\Common\Common;
 use PlaPok\Controllers\Globals\Variable;
@@ -27,8 +28,11 @@ class WebController
 
     public function index(): void
     {
-        $this->viewService->assign('youAreKicked', $this->roomService->getKickedNotification());
-        $this->roomService->clearSession();
+        $kicked = $this->roomService->getKickedNotification();
+        $this->viewService->assign('youAreKicked', $kicked);
+        if ($kicked) {
+            $this->roomService->clearSession();
+        }
         $this->viewService->display('index.inc.php');
     }
 
@@ -43,8 +47,14 @@ class WebController
         if ((empty($name)) || (empty($roomKey))) {
             throw new RuntimeException('Bad name/key');
         }
-        $this->roomService->joinRoom($roomKey, $name);
-        header('Location: ' . Common::link([__CLASS__, 'joined']));
+        try {
+            $this->roomService->joinRoom($roomKey, $name);
+            header('Location: ' . Common::link([__CLASS__, 'joined']));
+        } catch (DuplicateEntryException $e) {
+            if ($name)
+
+            $this->viewService->display('duplicate.inc.php');
+        }
     }
 
     /**
@@ -80,8 +90,12 @@ class WebController
      */
     public function exitRoom(): void
     {
-        [$roomKey, $username, $participantId, $isHost] = $this->roomService->roomInfo();
-        $this->roomService->exitRoom($roomKey, $participantId);
+        try {
+            [$roomKey, $username, $participantId, $isHost] = $this->roomService->roomInfo();
+            $this->roomService->exitRoom($roomKey, $participantId);
+        } catch (RoomInfoNotFound) {
+
+        }
         $this->roomService->clearSession();
         header('Location: ' . Common::link([__CLASS__, 'index']));
     }

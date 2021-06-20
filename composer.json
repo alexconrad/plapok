@@ -1,6 +1,6 @@
 {
     "require": {
-        "alexconrad/easy-mysql": "^0.2.1",
+        "alexconrad/easy-mysql": "^0.2.3",
         "myclabs/php-enum": "^1.8"
     },
     "autoload": {
